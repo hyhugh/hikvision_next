@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -10,6 +12,8 @@ from homeassistant.util import slugify
 from . import HikvisionConfigEntry
 from .hikvision_device import HikvisionDevice
 from .isapi import AnalogCamera, CameraStreamInfo, IPCamera
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -59,5 +63,17 @@ class HikvisionCamera(Camera):
         return self.device.get_stream_source(self.stream_info)
 
     async def async_camera_image(self, width: int | None = None, height: int | None = None) -> bytes | None:
-        """Return a still image response from the camera."""
-        return await self.device.get_camera_image(self.stream_info, width, height)
+        """Return a still image response from the camera stream using FFmpeg."""
+        try:
+            from homeassistant.components.ffmpeg import async_get_image
+            stream_source = await self.stream_source()
+            if stream_source:
+                return await async_get_image(
+                    self.hass,
+                    stream_source,
+                    width=width,
+                    height=height,
+                )
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.error("Failed to get camera image via FFmpeg: %s", ex)
+            return None

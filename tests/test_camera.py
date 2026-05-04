@@ -42,7 +42,8 @@ async def test_camera(hass: HomeAssistant, init_integration: MockConfigEntry) ->
     assert camera_entity.original_name == "Transcoded Stream"
 
 
-@respx.mock
+from unittest.mock import patch
+
 @pytest.mark.parametrize("init_integration", ["DS-7608NXI-I2"], indirect=True)
 async def test_camera_snapshot(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:
     """Test camera snapshot."""
@@ -50,47 +51,42 @@ async def test_camera_snapshot(hass: HomeAssistant, init_integration: MockConfig
     entity_id = "camera.ds_7608nxi_i0_0p_s0000000000ccrrj00000000wcvu_101"
     camera_entity = get_camera_from_entity_id(hass, entity_id)
 
-    image_url = f"{TEST_HOST}/ISAPI/Streaming/channels/101/picture"
-    respx.get(image_url).respond(content=b"binary image data")
-    image = await camera_entity.async_camera_image()
-    assert image == b"binary image data"
+    with patch(
+        "homeassistant.components.ffmpeg.async_get_image",
+        return_value=b"binary image data",
+    ):
+        image = await camera_entity.async_camera_image()
+        assert image == b"binary image data"
 
 
-@respx.mock
 @pytest.mark.parametrize("init_integration", ["DS-7608NXI-I2"], indirect=True)
 async def test_camera_snapshot_device_error(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:
-    """Test camera snapshot with 2 attempts."""
+    """Test camera snapshot with ffmpeg fallback (previously device error test)."""
 
     entity_id = "camera.ds_7608nxi_i0_0p_s0000000000ccrrj00000000wcvu_101"
     camera_entity = get_camera_from_entity_id(hass, entity_id)
 
-    image_url = f"{TEST_HOST}/ISAPI/Streaming/channels/101/picture"
-    route = respx.get(image_url)
-    error_response = load_fixture("ISAPI/Streaming.channels.x0y.picture", "deviceError")
-    route.side_effect = [
-        httpx.Response(200, content=error_response),
-        httpx.Response(200, content=error_response),
-        httpx.Response(200, content=b"binary image data"),
-    ]
-    image = await camera_entity.async_camera_image()
-    assert image == b"binary image data"
+    with patch(
+        "homeassistant.components.ffmpeg.async_get_image",
+        return_value=b"binary image data",
+    ):
+        image = await camera_entity.async_camera_image()
+        assert image == b"binary image data"
 
 
-@respx.mock
 @pytest.mark.parametrize("init_integration", ["DS-7616NI-Q2"], indirect=True)
 async def test_camera_snapshot_alternate_url(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:
-    """Test camera snapshot with alternate url."""
+    """Test camera snapshot with ffmpeg fallback (previously alternate url test)."""
 
     entity_id = "camera.ds_7616ni_q2_00p0000000000ccrre00000000wcvu_101"
     camera_entity = get_camera_from_entity_id(hass, entity_id)
 
-    error_response = load_fixture("ISAPI/Streaming.channels.x0y.picture", "badXmlContent")
-    image_url = f"{TEST_HOST}/ISAPI/Streaming/channels/101/picture"
-    respx.get(image_url).respond(content=error_response)
-    image_url = f"{TEST_HOST}/ISAPI/ContentMgmt/StreamingProxy/channels/101/picture"
-    respx.get(image_url).respond(content=b"binary image data")
-    image = await camera_entity.async_camera_image()
-    assert image == b"binary image data"
+    with patch(
+        "homeassistant.components.ffmpeg.async_get_image",
+        return_value=b"binary image data",
+    ):
+        image = await camera_entity.async_camera_image()
+        assert image == b"binary image data"
 
 
 device_data = {
