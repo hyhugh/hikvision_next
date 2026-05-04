@@ -145,6 +145,27 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             version=3,
         )
 
+    # 3 -> 4: Fix invalid entity IDs (slugify them)
+    if config_entry.version == 3:
+        entity_registry = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+        for entry in entries:
+            domain = entry.domain
+            if "." in entry.entity_id:
+                object_id = entry.entity_id.split(".", 1)[1]
+                slugified_object_id = slugify(object_id)
+                if object_id != slugified_object_id:
+                    new_entity_id = f"{domain}.{slugified_object_id}"
+                    try:
+                        entity_registry.async_update_entity(entry.entity_id, new_entity_id=new_entity_id)
+                    except ValueError:
+                        pass
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            version=4,
+        )
+
     _LOGGER.debug(
         "Migration to version %s.%s successful",
         config_entry.version,
