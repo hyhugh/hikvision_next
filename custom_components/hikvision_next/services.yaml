@@ -62,3 +62,91 @@ isapi_request:
       selector:
         text:
           multiline: true
+
+extract_nvr_clip:
+  name: Extract NVR clip
+  description: Download a video clip from the NVR's storage.
+  target:
+    entity:
+      domain: camera
+      integration: hikvision_next
+  fields:
+    duration:
+      required: true
+      name: Duration
+      description: Total duration of the clip in seconds.
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: s
+    lookback:
+      required: false
+      name: Lookback
+      description: Seconds before the trigger to include in the clip.
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: s
+    filename:
+      required: true
+      name: Filename
+      description: The filename to save the clip to.
+      example: "/media/hikvision_next/recordings/front_door.mp4"
+      selector:
+        text:
+
+extract_nvr_clip_by_time:
+  name: Extract NVR clip by exact time
+  description: Download a video clip from the NVR's storage using an exact start and end time.
+  fields:
+    entity_id:
+      required: true
+      name: Camera
+      description: The camera to extract the clip from. Must be the main stream.
+      selector:
+        entity:
+          domain: camera
+          integration: hikvision_next
+    start_time:
+      required: true
+      name: Start Time
+      description: Exact start time of the event (ISO format).
+      selector:
+        text:
+    end_time:
+      required: true
+      name: End Time
+      description: Exact end time of the event (ISO format).
+      selector:
+        text:
+    pre_buffer:
+      required: false
+      name: Pre-buffer
+      description: Seconds to include before the start time.
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: s
+    post_buffer:
+      required: false
+      name: Post-buffer
+      description: Seconds to include after the end time.
+      default: 20
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: s
+    filename:
+      required: true
+      name: Filename
+      description: The filename to save the clip to.
+      example: "/media/hikvision_next/recordings/front_door.mp4"
+      selector:
+        text:

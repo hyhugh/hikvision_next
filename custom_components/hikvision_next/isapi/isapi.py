@@ -737,6 +737,12 @@ class ISAPIClient:
         url = f"{self.device_info.ip_address}:{self.protocols.rtsp_port}/Streaming/channels/{stream.id}"
         return f"rtsp://{u}:{p}@{url}"
 
+    def get_playback_stream_source(self, stream: CameraStreamInfo, start_time: str, end_time: str) -> str:
+        """Get playback stream source."""
+        u = quote(self.username, safe="")
+        p = quote(self.password, safe="")
+        return f"rtsp://{u}:{p}@{self.device_info.ip_address}:{self.protocols.rtsp_port}/Streaming/tracks/{stream.id}?starttime={start_time}&endtime={end_time}"
+
     async def _detect_auth_method(self):
         """Establish the connection with device."""
         if not self._session:

@@ -21,6 +21,8 @@ ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ACTION_REBOOT = "reboot"
 ACTION_ISAPI_REQUEST = "isapi_request"
 ACTION_UPDATE_SNAPSHOT = "update_snapshot"
+ACTION_EXTRACT_NVR_CLIP = "extract_nvr_clip"
+ACTION_EXTRACT_NVR_CLIP_BY_TIME = "extract_nvr_clip_by_time"
 
 HIKVISION_EVENT = f"{DOMAIN}_event"
 
